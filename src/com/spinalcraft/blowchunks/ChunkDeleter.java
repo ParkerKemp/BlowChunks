@@ -30,9 +30,9 @@ public class ChunkDeleter {
 	}
 	
 	public int deleteChunksFromDB(){
-		String query = "SELECT world, x, z FROM Chunks";// WHERE deleted IS NULL";
+		String query = "SELECT world, x, z FROM Chunks WHERE batchNum IS NULL";
 		Statement stmt;
-				
+		int batchNum;		
 		ArrayList<ChunkLocation> chunks = new ArrayList<ChunkLocation>();
 		
 		try {
@@ -44,9 +44,18 @@ public class ChunkDeleter {
 			for(int i = 0; i < chunks.size(); i ++)
 				deleteChunk(chunks.get(i));
 			
-			//query = "UPDATE Chunks SET deleted = NULL WHERE deleted NOT NULL";
-			//stmt = conn.createStatement();
-			//stmt.executeUpdate(query);
+			query = "SELECT MAX(batchNum) FROM Chunks";
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+			if(rs.first())
+				batchNum = rs.getInt("MAX(batchNum)") + 1;
+			else
+				batchNum = 0;
+			
+			query = "UPDATE Chunks SET batchNum = " + batchNum + " WHERE batchNum IS NULL";
+			stmt = conn.createStatement();
+			stmt.executeUpdate(query);
+			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
